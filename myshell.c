@@ -28,8 +28,10 @@ Requirements (Refer to the document for accuracy and details):
 //Other functions needed ...
 
 static void reap_zombies(void) {
-    // OPTIONAL (but recommended if you support '&')
-    // Perhaps this will be useful: waitpid(-1, NULL, WNOHANG)
+    //Cleans up all potential zombie processes using a while loop
+    while (waitpid(-1, NULL, WNOHANG) > 0){
+
+    }
 }
 
 static int process_line(char *line) {
