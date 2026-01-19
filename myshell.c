@@ -23,8 +23,6 @@ Requirements (Refer to the document for accuracy and details):
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
-
 #define MAX_LINE 1024
 
 //Other functions needed ...
