@@ -16,8 +16,11 @@ Requirements (Refer to the document for accuracy and details):
 
 */
 
+#include "myshell.h"
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <limits.h>
 #include <sys/types.h>
@@ -29,21 +32,27 @@ Requirements (Refer to the document for accuracy and details):
 
 static void reap_zombies(void) {
     //Cleans up all potential zombie processes using a while loop
-    while (waitpid(-1, NULL, WNOHANG) > 0){
-
-    }
+    while (waitpid(-1, NULL, WNOHANG) > 0){//Reaping zombies
+        }
 }
 
 static int process_line(char *line) {
-    /*
-    Implement your program from here (your own design).
-    Return:
-      0 -> quit
-      1 -> continue
-    */
-
-    (void)line;//delete this line
-    return 1;
+    // Tokenize the input line into arguments
+    char *args[MAX_ARGS];
+    tokenize(line, args);
+    // If no command is entered, continue
+    if (args[0] == NULL){
+        return 1;
+    }
+    // Handle clearing of the screen
+    if(strcmp(args[0], "clr") == 0){
+        execute_clear();
+    }    
+    // Handle quitting the shell
+    else if(strcmp(args[0], "quit") == 0){
+        return 0;
+    }
+    return 1; // Continue the shell loop
 }
 
 int main(int argc, char *argv[]) {
