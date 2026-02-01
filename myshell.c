@@ -1,5 +1,3 @@
-// This is the code skeleton for Lab 2. If you do not need it, you may also build your code from scratch.
-
 /*
 Lab 2 – A Simple Shell
 
@@ -28,8 +26,6 @@ Requirements (Refer to the document for accuracy and details):
 
 #define MAX_LINE 1024
 
-//Other functions needed ...
-
 static void reap_zombies(void) {
     //Cleans up all potential zombie processes using a while loop
     while (waitpid(-1, NULL, WNOHANG) > 0){//Reaping zombies
@@ -49,14 +45,34 @@ static int process_line(char *line) {
         execute_clear();
     }    
     // Handle quitting the shell
-    else if(strcmp(args[0], "quit") == 0){
+    if(strcmp(args[0], "quit") == 0){
         return 0;
+    }
+    // Handle changing directories
+    if (strcmp(args[0], "cd") == 0) {
+        execute_cd(args);
+    }
+    if (strcmp(args[0], "dir") == 0) {
+        // Placeholder
+        return 1;
+    }
+    if (strcmp(args[0], "echo") == 0){
+        // Placeholder
+        return 1;
+    }
+    if (strcmp(args[0], "help") == 0){
+        // Placeholder
+        return 1;
+    }
+    if (strcmp(args[0], "pause") == 0){
+        execute_pause();
     }
     return 1; // Continue the shell loop
 }
 
 int main(int argc, char *argv[]) {
-    //TODO: set environment variable "shell" to the full path of myshell
+    //TODO: set environment variable "shell" to the full path of myshell 
+    //Requirement ix
 
     FILE *in = stdin;
     if (argc == 2) {
