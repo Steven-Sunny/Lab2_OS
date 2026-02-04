@@ -19,4 +19,6 @@ void execute_environ();
 
 void execute_echo();
 
+void execute_help();
+
 #endif // MYSHELL_H
