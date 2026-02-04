@@ -147,12 +147,50 @@ void execute_echo(char **args){
  * 
  */
 void execute_help(){
-    // Check if the readme file actually exists first
+
+    // Check if the readme file actually exists
     if (access("readme", F_OK) == -1) {
         printf("Error: 'readme' manual not found.\n");
         return;
     }
 
-    // Using system()
-    system("more readme");
+    // Change to use execute_external_command()
+    char *more_args[] = {"more", "readme", NULL};
+    execute_external_command(more_args, 0);
+}
+
+/**
+ * 
+ */
+void execute_external_command(char **args, int is_background) {
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("Fork failed");
+    } else if (pid == 0) {
+        // --- CHILD PROCESS ---
+        
+        // 1. Handle I/O Redirection (<, >, >>) here before exec [cite: 47]
+        
+        // 2. Set the 'parent' environment variable [cite: 35, 36]
+        // This variable must contain the full path to your shell [cite: 32, 36]
+
+        // TODO: Fix the shell not registering
+        printf("%s", getenv("shell"));
+        // setenv("parent", getenv("shell"), 1); 
+
+        // 3. Execute the program 
+        if (execvp(args[0], args) == -1) {
+            perror("Execution failed");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        // --- PARENT PROCESS ---
+        
+        if (!is_background) {
+            // Wait for child if '&' is NOT present 
+            waitpid(pid, NULL, 0);
+        }
+        // If it is background, we return to the prompt immediately 
+    }
 }

@@ -21,4 +21,6 @@ void execute_echo();
 
 void execute_help();
 
+void execute_external_command();
+
 #endif // MYSHELL_H
