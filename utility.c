@@ -66,13 +66,6 @@ void execute_cd(char **args) {
 /**
  * 
  */
-void execute_dir(char **args){
-// TODO: Make this function work with output and input redirection
-}
-
-/**
- * 
- */
 void execute_pause(char **args){
     printf("Shell paused. Press Enter to continue...");
     // Ensure the message is printed immediately
@@ -80,4 +73,73 @@ void execute_pause(char **args){
 
     // Read characters from standard input until a newline is encountered
     while (getchar() != '\n');
+}
+
+/**
+ * 
+ */
+void execute_environ(){
+    // TODO: Make this function work with output and input redirection
+    int i = 0;
+    extern char **environ;
+    while (environ[i] != NULL) {
+        printf("%s\n", environ[i]);
+        i++;
+    }
+}
+
+/**
+ * 
+ */
+void execute_dir(char **args){
+    // TODO: Make this function work with output and input redirection
+    char *target;
+    if (args[1] == NULL) {
+        target = ".";
+    } else {
+        target = args[1];
+    }
+    DIR *dir_ptr = opendir(target);
+    if (dir_ptr == NULL) {
+        perror("Error opening directory");
+        return;
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir_ptr)) != NULL) {
+        // Print the name of the file/folder
+        printf("%s\n", entry->d_name);
+    }
+    closedir(dir_ptr);
+}
+
+/**
+ * 
+ */
+void execute_echo(char **args){
+    // TODO: Make this function work with output and input redirection
+    // Start at 1 to skip the "echo" command itself
+    int i = 1; 
+
+    // Loop through all arguments until we hit NULL or a redirection operator
+    while (args[i] != NULL) {
+        // Check for redirection tokens (May need to change parser)
+        // If your parser doesn't strip redirection tokens from 'args', 
+        // you should stop printing when you encounter '>', '>>', or '<'.
+        if (strcmp(args[i], ">") == 0 || strcmp(args[i], ">>") == 0 || strcmp(args[i], "<") == 0) {
+            break;
+        }
+
+        printf("%s", args[i]);
+
+        // Add a single space between words if there is another argument coming
+        if (args[i + 1] != NULL && 
+            strcmp(args[i+1], ">") != 0 && 
+            strcmp(args[i+1], ">>") != 0) {
+            printf(" ");
+        }
+        i++;
+    }
+    
+    // Always end with a newline
+    printf("\n");
 }

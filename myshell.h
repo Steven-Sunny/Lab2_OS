@@ -15,4 +15,8 @@ void execute_dir();
 
 void execute_pause();
 
+void execute_environ();
+
+void execute_echo();
+
 #endif // MYSHELL_H

@@ -41,38 +41,48 @@ static int process_line(char *line) {
         return 1;
     }
     // Handle clearing of the screen
-    if(strcmp(args[0], "clr") == 0){
+    if (strcmp(args[0], "clr") == 0){
         execute_clear();
     }    
     // Handle quitting the shell
-    if(strcmp(args[0], "quit") == 0){
+    if (strcmp(args[0], "quit") == 0){
         return 0;
     }
     // Handle changing directories
     if (strcmp(args[0], "cd") == 0) {
         execute_cd(args);
     }
+    // Handle pausing the shell
+    if (strcmp(args[0], "pause") == 0){
+        execute_pause();
+    }
     if (strcmp(args[0], "dir") == 0) {
-        // Placeholder
-        return 1;
+        // Placeholder (Output Input Redirection needed)
+        execute_dir(args);
+    }
+    if (strcmp(args[0], "environ") == 0){
+        // Placeholder (Output Input Redirection needed)
+        execute_environ();
     }
     if (strcmp(args[0], "echo") == 0){
-        // Placeholder
-        return 1;
+        // Placeholder (Output Input Redirection needed)
+        execute_echo(args);
     }
     if (strcmp(args[0], "help") == 0){
         // Placeholder
         return 1;
     }
-    if (strcmp(args[0], "pause") == 0){
-        execute_pause();
-    }
     return 1; // Continue the shell loop
 }
 
 int main(int argc, char *argv[]) {
-    //TODO: set environment variable "shell" to the full path of myshell 
-    //Requirement ix
+        
+    // Set environment variable "shell" to the full path of myshell 
+    // Requirement ix
+    char actual_path[PATH_MAX];
+    if (realpath(argv[0], actual_path) != NULL) {
+        setenv("shell", actual_path, 1);
+    }
 
     FILE *in = stdin;
     if (argc == 2) {
