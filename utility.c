@@ -139,21 +139,20 @@ void execute_echo(char **args){
         }
         i++;
     }
+    // End with newline
+    printf("\n");
+}
 
-    /**
-     * 
-     */
-    void execute_help(char **args){
-        // Check if the readme file actually exists first
-        if (access("readme", F_OK) == -1) {
-            printf("Error: 'readme' manual not found.\n");
-            return;
-        }
-
-        // Using system()
-        system("more readme");
+/**
+ * 
+ */
+void execute_help(){
+    // Check if the readme file actually exists first
+    if (access("readme", F_OK) == -1) {
+        printf("Error: 'readme' manual not found.\n");
+        return;
     }
 
-    // End with a newline
-    printf("\n");
+    // Using system()
+    system("more readme");
 }

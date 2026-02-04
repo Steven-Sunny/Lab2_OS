@@ -70,7 +70,7 @@ static int process_line(char *line) {
     }
     if (strcmp(args[0], "help") == 0){
         // Placeholder
-        return 1;
+        execute_help();
     }
     return 1; // Continue the shell loop
 }
