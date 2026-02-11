@@ -154,7 +154,7 @@ void execute_help(){
         return;
     }
 
-    // Change to use execute_external_command()
+    // Uses execute_external_command()
     char *more_args[] = {"more", "readme", NULL};
     execute_external_command(more_args, 0);
 }
@@ -165,21 +165,20 @@ void execute_help(){
 void execute_external_command(char **args, int is_background) {
     pid_t pid = fork();
 
+    // Get the parent executable path name from the environment variable "shell"
+    char *parent_shell_name = getenv("shell");
+
     if (pid == -1) {
         perror("Fork failed");
     } else if (pid == 0) {
         // --- CHILD PROCESS ---
+        // Handle I/O Redirection (<, >, >>) here before exec
         
-        // 1. Handle I/O Redirection (<, >, >>) here before exec [cite: 47]
-        
-        // 2. Set the 'parent' environment variable [cite: 35, 36]
-        // This variable must contain the full path to your shell [cite: 32, 36]
+        // Set environment variable "parent" to the full path of myshell before exec of child process
+        setenv("parent", parent_shell_name, 1);
 
-        // TODO: Fix the shell not registering
-        printf("%s", getenv("shell"));
-        // setenv("parent", getenv("shell"), 1); 
+        // printf("Parent shell path: %s\n", getenv("parent"));
 
-        // 3. Execute the program 
         if (execvp(args[0], args) == -1) {
             perror("Execution failed");
             exit(EXIT_FAILURE);
@@ -191,6 +190,7 @@ void execute_external_command(char **args, int is_background) {
             // Wait for child if '&' is NOT present 
             waitpid(pid, NULL, 0);
         }
-        // If it is background, we return to the prompt immediately 
+        // If it is background, we return to the prompt immediately
+        return;
     }
 }
