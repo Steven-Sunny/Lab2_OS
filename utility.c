@@ -166,61 +166,140 @@ void execute_help(){
  * symbol to NULL, effectively truncating the arguments for execvp.
  * Returns 1 if redirection was found and handled, 0 otherwise, -1 on error.
  */
-int check_redirection(char **args) {
+// Redirect handling helpers
+#define MAX_REDIRECTS 16
+
+typedef enum { REDIR_OUT_TRUNC, REDIR_OUT_APPEND, REDIR_IN } redirect_type_t;
+
+typedef struct {
+    redirect_type_t type;
+    char *filename;
+} redirect_t;
+
+// Parse redirects from args into redirects[]; returns -1 on syntax error, 0 otherwise
+static int parse_redirects(char **args, redirect_t *redirects, int *count) {
     int i = 0;
+    int rc = 0;
+    *count = 0;
 
     while (args[i] != NULL) {
-        if (strcmp(args[i], ">") == 0) {
-            // Output redirection (overwrite)
+        if (strcmp(args[i], ">") == 0 || strcmp(args[i], ">>") == 0 || strcmp(args[i], "<") == 0) {
             if (args[i + 1] == NULL) {
-                fprintf(stderr, "myshell: syntax error near unexpected token '>'\n");
+                fprintf(stderr, "myshell: syntax error near unexpected token '%s'\n", args[i]);
                 return -1;
             }
-            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd < 0) { 
-                perror("myshell: open"); 
-                return -1; 
-            }
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
-            args[i] = NULL; // Truncate args
-            return 1;
-        } 
-        else if (strcmp(args[i], ">>") == 0) {
-            // Output redirection (append)
-            if (args[i + 1] == NULL) {
-                fprintf(stderr, "myshell: syntax error near unexpected token '>>'\n");
+            if (*count >= MAX_REDIRECTS) {
+                fprintf(stderr, "myshell: too many redirections\n");
                 return -1;
             }
-            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
-            if (fd < 0) { 
-                perror("myshell: open"); 
-                return -1; 
+            if (strcmp(args[i], ">") == 0) {
+                redirects[*count].type = REDIR_OUT_TRUNC;
+            } else if (strcmp(args[i], ">>") == 0) {
+                redirects[*count].type = REDIR_OUT_APPEND;
+            } else {
+                redirects[*count].type = REDIR_IN;
             }
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
-            args[i] = NULL;
-            return 1;
-        } 
-        else if (strcmp(args[i], "<") == 0) {
-            // Input redirection
-            if (args[i + 1] == NULL) {
-                fprintf(stderr, "myshell: syntax error near unexpected token '<'\n");
+            redirects[*count].filename = strdup(args[i + 1]);
+            if (redirects[*count].filename == NULL) {
+                perror("myshell: strdup");
                 return -1;
             }
-            int fd = open(args[i + 1], O_RDONLY);
-            if (fd < 0) { 
-                perror("myshell: open"); 
-                return -1; 
-            }
-            dup2(fd, STDIN_FILENO);
-            close(fd);
-            args[i] = NULL;
-            return 1;
+            (*count)++;
+            // skip operator and filename
+            i += 2; 
+            continue;
         }
         i++;
     }
+    return rc;
+}
+
+// Apply parsed redirects; returns -1 on error, 0 otherwise
+static int apply_redirects(redirect_t *redirects, int count) {
+    for (int i = 0; i < count; i++) {
+        int fd;
+        if (redirects[i].type == REDIR_OUT_TRUNC) {
+            fd = open(redirects[i].filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) { 
+                perror("myshell: open"); 
+                return -1; 
+            }
+            if (dup2(fd, STDOUT_FILENO) < 0) { 
+                perror("myshell: dup2"); 
+                close(fd); 
+                return -1; 
+            }
+            close(fd);
+        } else if (redirects[i].type == REDIR_OUT_APPEND) {
+            fd = open(redirects[i].filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd < 0) { 
+                perror("myshell: open"); 
+                return -1; 
+            }
+            if (dup2(fd, STDOUT_FILENO) < 0) {
+                 perror("myshell: dup2"); 
+                 close(fd); 
+                 return -1; 
+                }
+            close(fd);
+        } else if (redirects[i].type == REDIR_IN) {
+            fd = open(redirects[i].filename, O_RDONLY);
+            if (fd < 0) { 
+                perror("myshell: open"); return -1; 
+            }
+            if (dup2(fd, STDIN_FILENO) < 0) { 
+                perror("myshell: dup2"); 
+                close(fd); 
+                return -1; 
+            }
+            close(fd);
+        }
+    }
     return 0;
+}
+
+static void free_redirects(redirect_t *redirects, int count) {
+    for (int i = 0; i < count; i++) {
+        free(redirects[i].filename);
+        redirects[i].filename = NULL;
+    }
+}
+
+// Remove redirection operators and their filenames from args in-place
+static void remove_redirect_tokens(char **args) {
+    int i = 0, j = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], ">") == 0 || strcmp(args[i], ">>") == 0 || strcmp(args[i], "<") == 0) {
+            // skip this operator and its filename
+            i += 2;
+            continue;
+        }
+        args[j++] = args[i++];
+    }
+    args[j] = NULL;
+}
+
+int check_redirection(char **args) {
+    redirect_t redirects[MAX_REDIRECTS];
+    int count = 0;
+
+    if (parse_redirects(args, redirects, &count) == -1) {
+        free_redirects(redirects, count);
+        return -1;
+    }
+
+    if (count == 0) return 0;
+
+    if (apply_redirects(redirects, count) == -1) {
+        free_redirects(redirects, count);
+        return -1;
+    }
+
+    // Remove tokens so execvp sees only command args
+    remove_redirect_tokens(args);
+
+    free_redirects(redirects, count);
+    return 1;
 }
 
 /**
