@@ -33,9 +33,13 @@ static void reap_zombies(void) {
 }
 
 static int process_line(char *line) {
-    // Tokenize the input line into arguments
     char *args[MAX_ARGS];
+    // Tokenize the input line into arguments
     tokenize(line, args);
+    // Check for i/o redirection and handle it
+    if (check_redirection(args) == -1) {
+        return 0;
+    }
     // If no command is entered, continue
     if (args[0] == NULL){
         return 1;
@@ -116,12 +120,22 @@ int main(int argc, char *argv[]) {
     char line[MAX_LINE];
     char cwd[PATH_MAX];
 
+    int saved_stdout = dup(STDOUT_FILENO);
+    int saved_stdin = dup(STDIN_FILENO);
+
     while (1) {
         // Reap any zombie processes before displaying the prompt or processing the next command
         reap_zombies();
-
+        
         if (!is_batch_mode) {
             if (getcwd(cwd, sizeof(cwd)) == NULL) { perror("getcwd"); break; }
+            // Flush stdout and stdin to ensure the prompt is displayed in the terminal and input is read properly
+            fflush(stdout);
+            fflush(stdin);
+            // Restore original stdout and stdin if i/o redirection was used
+            dup2(saved_stdout, STDOUT_FILENO);
+            dup2(saved_stdin, STDIN_FILENO);
+
             printf(">myshell:%s$ ", cwd);
             fflush(stdout);
         }
@@ -130,6 +144,10 @@ int main(int argc, char *argv[]) {
 
         if (process_line(line) == 0) break;
     }
+
+    // Close the saved file descriptors for stdout and stdin before exiting
+    close(saved_stdout);
+    close(saved_stdin);
 
     if (is_batch_mode) fclose(in);
     return 0;

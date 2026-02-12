@@ -12,6 +12,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+
 /**
  * 
  */
@@ -66,7 +69,7 @@ void execute_cd(char **args) {
 /**
  * 
  */
-void execute_pause(char **args){
+void execute_pause(){
     printf("Shell paused. Press Enter to continue...");
     // Ensure the message is printed immediately
     fflush(stdout); 
@@ -123,8 +126,6 @@ void execute_echo(char **args){
     // Loop through all arguments until we hit NULL or a redirection operator
     while (args[i] != NULL) {
         // Check for redirection tokens (May need to change parser)
-        // If your parser doesn't strip redirection tokens from 'args', 
-        // you should stop printing when you encounter '>', '>>', or '<'.
         if (strcmp(args[i], ">") == 0 || strcmp(args[i], ">>") == 0 || strcmp(args[i], "<") == 0) {
             break;
         }
@@ -160,6 +161,69 @@ void execute_help(){
 }
 
 /**
+ * Helper to check for redirection tokens in the argument list.
+ * This function modifies the args array by setting the redirection 
+ * symbol to NULL, effectively truncating the arguments for execvp.
+ * Returns 1 if redirection was found and handled, 0 otherwise, -1 on error.
+ */
+int check_redirection(char **args) {
+    int i = 0;
+
+    while (args[i] != NULL) {
+        if (strcmp(args[i], ">") == 0) {
+            // Output redirection (overwrite)
+            if (args[i + 1] == NULL) {
+                fprintf(stderr, "myshell: syntax error near unexpected token '>'\n");
+                return -1;
+            }
+            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) { 
+                perror("myshell: open"); 
+                return -1; 
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+            args[i] = NULL; // Truncate args
+            return 1;
+        } 
+        else if (strcmp(args[i], ">>") == 0) {
+            // Output redirection (append)
+            if (args[i + 1] == NULL) {
+                fprintf(stderr, "myshell: syntax error near unexpected token '>>'\n");
+                return -1;
+            }
+            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd < 0) { 
+                perror("myshell: open"); 
+                return -1; 
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+            args[i] = NULL;
+            return 1;
+        } 
+        else if (strcmp(args[i], "<") == 0) {
+            // Input redirection
+            if (args[i + 1] == NULL) {
+                fprintf(stderr, "myshell: syntax error near unexpected token '<'\n");
+                return -1;
+            }
+            int fd = open(args[i + 1], O_RDONLY);
+            if (fd < 0) { 
+                perror("myshell: open"); 
+                return -1; 
+            }
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+            args[i] = NULL;
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+}
+
+/**
  * 
  */
 void execute_external_command(char **args, int is_background) {
@@ -175,17 +239,21 @@ void execute_external_command(char **args, int is_background) {
         // --- CHILD PROCESS ---
         // Set environment variable "parent" to the full path of myshell before exec of child process
         setenv("parent", parent_shell_name, 1);
-
         // printf("Parent shell path: %s\n", getenv("parent"));
+
+        // Apply I/O redirection if present in command line
+        if (check_redirection(args) == -1) {
+            exit(1);
+        }
 
         if (execvp(args[0], args) == -1) {
             perror("Execution failed");
-            exit(EXIT_FAILURE);
+            exit(1);
         }
     } else {
         // --- PARENT PROCESS ---
         if (!is_background) {
-            // Wait for child if '&' is NOT present 
+            // Wait for child if '&' is not present 
             waitpid(pid, NULL, 0);
         }
         // If it is background, we return to the prompt immediately
