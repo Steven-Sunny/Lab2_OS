@@ -163,6 +163,7 @@ void execute_help(){
  * 
  */
 void execute_external_command(char **args, int is_background) {
+    // Fork a child process to execute an external command
     pid_t pid = fork();
 
     // Get the parent executable path name from the environment variable "shell"
@@ -172,8 +173,6 @@ void execute_external_command(char **args, int is_background) {
         perror("Fork failed");
     } else if (pid == 0) {
         // --- CHILD PROCESS ---
-        // Handle I/O Redirection (<, >, >>) here before exec
-        
         // Set environment variable "parent" to the full path of myshell before exec of child process
         setenv("parent", parent_shell_name, 1);
 
@@ -185,7 +184,6 @@ void execute_external_command(char **args, int is_background) {
         }
     } else {
         // --- PARENT PROCESS ---
-        
         if (!is_background) {
             // Wait for child if '&' is NOT present 
             waitpid(pid, NULL, 0);

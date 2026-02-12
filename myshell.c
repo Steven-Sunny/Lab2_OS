@@ -41,53 +41,73 @@ static int process_line(char *line) {
         return 1;
     }
     // Handle clearing of the screen
-    if (strcmp(args[0], "clr") == 0){
+    else if (strcmp(args[0], "clr") == 0){
         execute_clear();
     }    
     // Handle quitting the shell
-    if (strcmp(args[0], "quit") == 0){
+    else if (strcmp(args[0], "quit") == 0){
         return 0;
     }
     // Handle changing directories
-    if (strcmp(args[0], "cd") == 0) {
+    else if (strcmp(args[0], "cd") == 0) {
         execute_cd(args);
     }
     // Handle pausing the shell
-    if (strcmp(args[0], "pause") == 0){
+    else if (strcmp(args[0], "pause") == 0){
         execute_pause();
     }
-    if (strcmp(args[0], "dir") == 0) {
-        // Placeholder (Output Input Redirection needed)
+    // Handle listing directory contents
+    else if (strcmp(args[0], "dir") == 0) {
         execute_dir(args);
     }
-    if (strcmp(args[0], "environ") == 0){
-        // Placeholder (Output Input Redirection needed)
+    // Handle printing environment variables
+    else if (strcmp(args[0], "environ") == 0){
         execute_environ();
     }
-    if (strcmp(args[0], "echo") == 0){
-        // Placeholder (Output Input Redirection needed)
+    // Handle echoing arguments
+    else if (strcmp(args[0], "echo") == 0){
         execute_echo(args);
     }
-    if (strcmp(args[0], "help") == 0){
-        // Placeholder
+    // Handle displaying help information
+    else if (strcmp(args[0], "help") == 0){
         execute_help();
     }
-    return 1; // Continue the shell loop
+    // If the command is not an internal command, treat as external command
+    else {
+        int background = 0;
+        int last_arg = 0;
+        while (args[last_arg] != NULL) last_arg++;
+        
+        if (last_arg > 0 && strcmp(args[last_arg-1], "&") == 0) {
+            // Set flag to indicate it is a background process
+            background = 1;
+            // Remove the '&' from the arguments
+            args[last_arg-1] = NULL;
+        }
+        // Execute as external command with appropriate background flag
+        execute_external_command(args, background);
+    }
+    // Continue the shell loop
+    return 1; 
 }
 
 int main(int argc, char *argv[]) {
         
     // Set environment variable "shell" to the full path of myshell 
-    // Requirement ix
     char actual_path[PATH_MAX];
     if (realpath(argv[0], actual_path) != NULL) {
         setenv("shell", actual_path, 1);
     }
 
     FILE *in = stdin;
+    // Flag to indicate if we are running in batch mode
+    int is_batch_mode = 0;
+
     if (argc == 2) {
         in = fopen(argv[1], "r");
         if (!in) { perror("fopen"); return 1; }
+        // Set batch mode flag to indicate we're running in batch mode
+        is_batch_mode = 1;
     } else if (argc > 2) {
         fprintf(stderr, "Usage: %s [batchfile]\n", argv[0]);
         return 1;
@@ -97,9 +117,10 @@ int main(int argc, char *argv[]) {
     char cwd[PATH_MAX];
 
     while (1) {
+        // Reap any zombie processes before displaying the prompt or processing the next command
         reap_zombies();
 
-        if (in == stdin) {
+        if (!is_batch_mode) {
             if (getcwd(cwd, sizeof(cwd)) == NULL) { perror("getcwd"); break; }
             printf(">myshell:%s$ ", cwd);
             fflush(stdout);
@@ -110,7 +131,7 @@ int main(int argc, char *argv[]) {
         if (process_line(line) == 0) break;
     }
 
-    if (in != stdin) fclose(in);
+    if (is_batch_mode) fclose(in);
     return 0;
 }
 
