@@ -1,1 +1,72 @@
-this is the readme file
+Name: Steven Sun
+Student Number: 100816207
+Work Group: 29
+BASIC OPERATION
+
+The shell can be operated in two modes:
+
+Interactive Mode: Start the shell by typing './myshell'. You will be presented with a prompt showing your current directory. Type commands and press 'Enter' to execute.
+
+Batch Mode: Run the shell with a file argument: './myshell batchfile'. The shell will execute all commands within that file in order and then exit.
+
+INTERNAL COMMANDS
+
+The following commands are built directly into the shell:
+
+cd <directory>: Changes the current working directory.
+
+If no directory is specified, it prints the current working directory path.
+
+It updates the 'PWD' environment variable automatically.
+
+clr: Clears the terminal screen.
+
+dir <directory>: Lists the contents of the specified directory. If no directory is provided, it lists the contents of the current directory.
+
+environ: Displays all current environment variables.
+
+echo <comment>: Prints your comment to the screen followed by a newline. Extra spaces between words are reduced to a single space.
+
+help: Displays this user manual (readme).
+
+pause: Suspends shell operation until the 'Enter' key is pressed.
+
+quit: Exits the shell.
+
+PROGRAM INVOCATION (EXTERNAL COMMANDS)
+
+Any command entered that is not an internal command listed above is treated as an external program. The shell will attempt to find and execute this program by creating a new "child" process.
+
+THE SHELL ENVIRONMENT
+
+The "environment" is a collection of variables that define the context in which programs run.
+
+shell: This variable contains the full path to your 'myshell' executable.
+
+parent: When you run an external program, the shell passes an environment variable called 'parent' to that program, which also points to the 'myshell' path.
+
+I/O REDIRECTION
+
+By default, commands read input from the keyboard and send output to the screen. You can change this using redirection operators:
+
+Output Redirection (>): Overwrites a file with the command's output.
+Example: 'dir > myfiles.txt' (Creates or clears 'myfiles.txt' and saves the directory listing there).
+
+Append Output (>>): Adds the command's output to the end of an existing file.
+Example: 'echo Hello >> greetings.txt' (Adds "Hello" to the end of the file).
+
+Input Redirection (<): Forces a program to read its data from a file instead of the keyboard.
+Example: 'myprogram < input_data.txt'.
+
+Redirection can be combined: 'program arg1 < input.txt > output.txt'.
+
+BACKGROUND EXECUTION (&)
+
+Normally, the shell waits for a program to finish before asking for the next command. To run a program in the "background" and keep using the shell immediately:
+
+Add an ampersand (&) to the end of your command.
+
+Example: 'long_calculation_program &'
+The shell will launch the program and return to the prompt instantly.
+
+End of Manual

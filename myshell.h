@@ -1,9 +1,18 @@
 /**
  * File: myshell.h
+ * Name: Steven Sun
+ * Student Number: 100816207
+ * Work Group: 29
  */
+
 #ifndef MYSHELL_H
 #define MYSHELL_H
 #define MAX_ARGS 64
+
+/**
+ * Defines function prototypes for the built-in 
+ * commands and utility functions used in myshell.c and utility.c
+ */
 
 void tokenize (char *line, char **args);
 
