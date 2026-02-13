@@ -1,7 +1,9 @@
 Name: Steven Sun
 Student Number: 100816207
 Work Group: 29
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 BASIC OPERATION
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 The shell can be operated in two modes:
 
@@ -9,7 +11,9 @@ Interactive Mode: Start the shell by typing './myshell'. You will be presented w
 
 Batch Mode: Run the shell with a file argument: './myshell batchfile'. The shell will execute all commands within that file in order and then exit.
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 INTERNAL COMMANDS
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 The following commands are built directly into the shell:
 
@@ -33,7 +37,9 @@ pause: Suspends shell operation until the 'Enter' key is pressed.
 
 quit: Exits the shell.
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 PROGRAM INVOCATION (EXTERNAL COMMANDS)
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 Any command entered that is not an internal command listed above is treated as an external program. The shell will attempt to find and execute this program by creating a new "child" process.
 
@@ -45,7 +51,9 @@ shell: This variable contains the full path to your 'myshell' executable.
 
 parent: When you run an external program, the shell passes an environment variable called 'parent' to that program, which also points to the 'myshell' path.
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 I/O REDIRECTION
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 By default, commands read input from the keyboard and send output to the screen. You can change this using redirection operators:
 
@@ -60,7 +68,9 @@ Example: 'myprogram < input_data.txt'.
 
 Redirection can be combined: 'program arg1 < input.txt > output.txt'.
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 BACKGROUND EXECUTION (&)
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 Normally, the shell waits for a program to finish before asking for the next command. To run a program in the "background" and keep using the shell immediately:
 
